@@ -1,7 +1,7 @@
 require('dotenv').config()
 const express = require('express');
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const app = express();
 const port = process.env.PORT || 5000;
 
@@ -38,20 +38,53 @@ async function run() {
       res.send(result);
     })
 
-    app.post('/items', async(req, res) => {
-        const itemsInfo = req.body;
-        const result = await itemsData.insertOne(itemsInfo);
-        res.send(result)
+    app.get('/host_items', async (req, res) => {
+      const email = req.query.email;
+      const query = { hostemail: email }
+      const cursor = itemsData.find(query);
+      const result = await cursor.toArray(cursor);
+      res.send(result);
     })
 
+    app.get('/host_items/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await itemsData.findOne(query);
+      res.send(result)
+    })
 
+    app.post('/items', async (req, res) => {
+      const itemsInfo = req.body;
+      const result = await itemsData.insertOne(itemsInfo);
+      res.send(result)
+    })
 
+    app.put('/host_items/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const update = req.body;
+      const options = { upsert: true }
+      const updateInfo = {
+        $set: {
+          type: update.type,
+          image: update.image,
+          title: update.title,
+          category: update.category,
+          location: update.location,
+          date: update.date,
+          description: update.description,
+        }
+      };
+      const result = await itemsData.updateOne(query, updateInfo, options)
+      res.send(result)
+    })
 
-
-
-
-
-
+    app.delete('/host_items/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await itemsData.deleteOne(query)
+      res.send(result)
+    })
 
 
 
@@ -64,9 +97,9 @@ run().catch(console.dir);
 
 
 app.get('/', (req, res) => {
-    res.send("This is server side web")
+  res.send("This is server side web")
 })
 
 app.listen(port, () => {
-    console.log("Connect")
+  console.log("Connect")
 })

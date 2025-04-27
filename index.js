@@ -38,6 +38,12 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/item', async (req, res) => {
+      const cursor = itemsData.find().sort({createdateTime: -1}).limit(6);
+      const result = await cursor.toArray(cursor);
+      res.send(result);
+    })
+
     app.get('/host_items', async (req, res) => {
       const email = req.query.email;
       const query = { hostemail: email }

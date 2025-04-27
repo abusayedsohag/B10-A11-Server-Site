@@ -31,6 +31,7 @@ async function run() {
 
     // Insert Operation
     const itemsData = client.db('whereisit-itemsDB').collection('items')
+    const coveredData = client.db('whereisit-itemsDB').collection('covereditems')
 
     app.get('/items', async (req, res) => {
       const cursor = itemsData.find();
@@ -38,8 +39,15 @@ async function run() {
       res.send(result);
     })
 
+    app.get('/items/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const result = await itemsData.findOne(query)
+      res.send(result);
+    })
+
     app.get('/item', async (req, res) => {
-      const cursor = itemsData.find().sort({createdateTime: -1}).limit(6);
+      const cursor = itemsData.find().sort({ createdateTime: -1 }).limit(6);
       const result = await cursor.toArray(cursor);
       res.send(result);
     })
@@ -85,10 +93,32 @@ async function run() {
       res.send(result)
     })
 
+    app.put('/items/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) }
+      const update = req.body;
+      const options = { upsert: true }
+      const updateInfo = {
+        $set: {
+          status: update.status
+        }
+      };
+      const result = await itemsData.updateOne(query, updateInfo, options)
+      res.send(result)
+    })
+
     app.delete('/host_items/:id', async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await itemsData.deleteOne(query)
+      res.send(result)
+    })
+
+    // Recovered
+
+    app.post('/recovereditems', async (req, res) => {
+      const itemsInfo = req.body;
+      const result = await coveredData.insertOne(itemsInfo);
       res.send(result)
     })
 
